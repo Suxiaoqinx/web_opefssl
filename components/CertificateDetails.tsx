@@ -8,6 +8,8 @@ interface Certificate {
     valid_to: string;
     serialNumber: string;
     fingerprint: string;
+    sanCount?: number;
+    sans?: string[];
 }
 
 interface CertificateDetailsProps {
@@ -32,6 +34,9 @@ const CertificateDetails: React.FC<CertificateDetailsProps> = ({ certificate }) 
 
     return (
         <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="子域名数量">
+                <Tag color="purple">{certificate.sanCount || 0} 个</Tag>
+            </Descriptions.Item>
             <Descriptions.Item label="颁发给 (Subject)">
                 <div className="flex flex-wrap gap-2">
                     {certificate.subject && Object.entries(certificate.subject).map(([key, val]) => (

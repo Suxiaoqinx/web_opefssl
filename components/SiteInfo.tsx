@@ -36,11 +36,9 @@ const SiteInfo: React.FC<SiteInfoProps> = ({ site, target }) => {
       </div>
       
       <Descriptions bordered column={1} size="small">
-         {site.description && site.description.trim() !== '' && (
-             <Descriptions.Item label="站点描述">
-                 {site.description}
-             </Descriptions.Item>
-         )}
+         <Descriptions.Item label="站点描述">
+             {site.description && site.description.trim() !== '' ? site.description : 'N/A'}
+         </Descriptions.Item>
          
          <Descriptions.Item label="服务器 IP">
              <span className="font-mono">{site.ip}</span>
@@ -61,7 +59,7 @@ const SiteInfo: React.FC<SiteInfoProps> = ({ site, target }) => {
          )}
          
          <Descriptions.Item label="Web 服务器">
-             <Tag color="blue">{site.server}</Tag>
+             <Tag color="blue">{site.server && site.server !== '—' && site.server !== '-' ? site.server : 'N/A'}</Tag>
          </Descriptions.Item>
       </Descriptions>
     </div>

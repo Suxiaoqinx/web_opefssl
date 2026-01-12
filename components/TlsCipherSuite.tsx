@@ -4,6 +4,7 @@ import { Descriptions, Tag } from 'antd';
 interface TlsVersion {
     version: string;
     supported: boolean;
+    duration?: number;
 }
 
 interface Cipher {
@@ -27,6 +28,8 @@ interface TlsCipherSuiteProps {
 const TlsCipherSuite: React.FC<TlsCipherSuiteProps> = ({ tls }) => {
     const formatTlsVersion = (version: string) => {
         const map: Record<string, string> = {
+            'SSLv2': 'SSL 2.0',
+            'SSLv3': 'SSL 3.0',
             'TLSv1': 'TLS 1.0',
             'TLSv1.1': 'TLS 1.1',
             'TLSv1.2': 'TLS 1.2',
@@ -48,8 +51,9 @@ const TlsCipherSuite: React.FC<TlsCipherSuiteProps> = ({ tls }) => {
                             <Tag 
                                 key={ver.version}
                                 color={ver.supported ? 'success' : 'default'}
+                                className="flex items-center gap-1"
                             >
-                                {formatTlsVersion(ver.version)}
+                                <span>{formatTlsVersion(ver.version)}</span>
                             </Tag>
                         ))}
                     </div>
