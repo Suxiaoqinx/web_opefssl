@@ -1,12 +1,14 @@
 # Web SSL/TLS 检测工具
 
 一个基于 Next.js + Ant Design 的网站安全检测工具。
-输入域名，一键分析 HTTPS 证书、TLS 套件、HTTP 协议版本及连接耗时。
+输入域名，一键分析 HTTPS 证书、TLS 套件、HTTP 协议版本、连接耗时及客户端兼容性。
 
 ## 功能特性
 
 - **全方位检测**：支持 HTTP/2、HTTP/3 (QUIC)、HSTS 及 CNAME 记录分析。
 - **证书详情**：直观展示证书颁发者、有效期（含倒计时）、序列号及 SHA 指纹。
+- **客户端模拟**：模拟 Chrome, Firefox, Safari, Android, Java, Python 等多种客户端的 TLS 握手情况。
+- **证书兼容性**：检测证书在 Windows, macOS, iOS, Android, Java, Linux 等不同平台下的信任状态。
 - **加密套件**：识别当前 TLS 握手使用的加密套件、密钥交换算法及签名算法。
 - **性能分析**：可视化展示 DNS、TCP、TLS 握手及 TTFB 各阶段耗时。
 - **探测节点**：显示发起检测的服务器节点信息（IP/地理位置）。
