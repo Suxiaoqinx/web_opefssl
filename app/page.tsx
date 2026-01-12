@@ -144,7 +144,7 @@ export default function Home() {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const response = await axios.post('/api/check', {
+      const response = await axios.post(`${apiNode}/api/check`, {
         url: urlToCheck,
         timestamp,
         hash
