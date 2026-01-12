@@ -293,13 +293,17 @@ function checkTls(parsedUrl: URL) {
 async function fetchMetadata(url: string) {
     try {
         const res = await fetch(url, { 
-            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; TLSChecker/1.0)' } as any,
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
+            } as any,
         });
         const html = await res.text();
         const $ = cheerio.load(html);
         
-        const title = $('title').text() || '';
-        const description = $('meta[name="description"]').attr('content') || '';
+        const title = ($('title').text() || '').trim();
+        const description = ($('meta[name="description"]').attr('content') || '').trim();
         
         let favicon = $('link[rel="icon"]').attr('href') || $('link[rel="shortcut icon"]').attr('href') || '/favicon.ico';
         if (favicon && !favicon.startsWith('http')) {

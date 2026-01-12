@@ -36,7 +36,7 @@ const SiteInfo: React.FC<SiteInfoProps> = ({ site, target }) => {
       </div>
       
       <Descriptions bordered column={1} size="small">
-         {site.description && (
+         {site.description && site.description.trim() !== '' && (
              <Descriptions.Item label="站点描述">
                  {site.description}
              </Descriptions.Item>
