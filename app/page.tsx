@@ -355,6 +355,10 @@ export default function Home() {
               作者主页
             </a>
           </div>
+          <div className="mt-2 text-xs opacity-75">
+             <span className="mr-3">Version 0.1.0</span>
+             <span>当前节点: {apiNodes.find(n => n.value === apiNode)?.label || '未知节点'}</span>
+          </div>
         </div>
       </div>
     </div>
