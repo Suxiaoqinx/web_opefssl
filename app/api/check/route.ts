@@ -49,6 +49,16 @@ const resolveCname = (hostname: string): Promise<string[]> => {
     });
 };
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+    return NextResponse.json({}, { headers: corsHeaders });
+}
+
 async function fetchGeoIp(ip: string) {
     if (!ip) return null;
     try {
@@ -138,7 +148,7 @@ export async function POST(request: Request) {
         const supportedTlsVersions: any[] = tlsVersionsResult.status === 'fulfilled' ? (tlsVersionsResult.value as any[]) : [];
 
         if (!tlsData) {
-            return NextResponse.json({ error: 'TLS handshake failed', details: (tlsResult as PromiseRejectedResult).reason }, { status: 500 });
+            return NextResponse.json({ error: 'TLS handshake failed', details: (tlsResult as PromiseRejectedResult).reason }, { status: 500, headers: corsHeaders });
         }
 
         // Combine GeoIP info if IP is available
@@ -173,11 +183,11 @@ export async function POST(request: Request) {
                 cname: dnsData.cname,
                 geo: geo
             }
-        });
+        }, { headers: corsHeaders });
 
     } catch (err) {
         console.error(err);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500, headers: corsHeaders });
     }
 }
 

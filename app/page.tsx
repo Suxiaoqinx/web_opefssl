@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Clock, Trash2, Github, MapPin } from 'lucide-react';
-import { Input, Button, Card, Alert, Row, Col, Typography, Space, message } from 'antd';
+import { Input, Button, Card, Alert, Row, Col, Typography, Space, message, Select } from 'antd';
 import SiteInfo from '@/components/SiteInfo';
 import ConnectionSupport from '@/components/ConnectionSupport';
 import ConnectionLatency from '@/components/ConnectionLatency';
@@ -36,6 +36,11 @@ const commonSites = [
   { name: 'Pixiv', url: 'www.pixiv.net' },
 ];
 
+const apiNodes = [
+  { label: '海外节点', value: 'https://http-vercel.toubiec.cn' },
+  { label: '本地节点', value: '' },
+];
+
 export default function Home() {
   const [messageApi, contextHolder] = message.useMessage();
   const [targetUrl, setTargetUrl] = useState('');
@@ -45,6 +50,7 @@ export default function Home() {
   const [history, setHistory] = useState<string[]>([]);
   const [nodeInfo, setNodeInfo] = useState<any>(null);
   const [nodeLoading, setNodeLoading] = useState(true);
+  const [apiNode, setApiNode] = useState('https://http-vercel.toubiec.cn');
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('tls_check_history');
@@ -55,8 +61,10 @@ export default function Home() {
         console.error('Failed to parse history', e);
       }
     }
+  }, []);
 
-    // Fetch node info
+  // Fetch node info when apiNode changes
+  useEffect(() => {
     const fetchNodeInfo = async () => {
       setNodeLoading(true);
       try {
@@ -69,17 +77,18 @@ export default function Home() {
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-        const res = await axios.post('/api/node-info', { timestamp, hash });
+        const res = await axios.post(`${apiNode}/api/node-info`, { timestamp, hash });
         setNodeInfo(res.data);
       } catch (err) {
         console.error('Failed to fetch node info', err);
+        setNodeInfo(null);
       } finally {
         setNodeLoading(false);
       }
     };
     
     fetchNodeInfo();
-  }, []);
+  }, [apiNode]);
 
   const addToHistory = (url: string) => {
     const newHistory = [...history];
@@ -183,9 +192,18 @@ export default function Home() {
 
         {/* Search Card */}
         <Card className="mb-5 shadow-sm" variant="borderless">
-          <div className="mb-5">
-            <Title level={4} style={{ margin: 0, marginBottom: 4 }}>输入网站 URL</Title>
-            <Text type="secondary" className="text-sm">必须包含 http:// 或 https://，且不跟随重定向</Text>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
+            <div>
+              <Title level={4} style={{ margin: 0, marginBottom: 4 }}>输入网站 URL</Title>
+              <Text type="secondary" className="text-sm">必须包含 http:// 或 https://，且不跟随重定向</Text>
+            </div>
+            <Select
+              value={apiNode}
+              onChange={setApiNode}
+              options={apiNodes}
+              style={{ width: 260 }}
+              placeholder="选择检测节点"
+            />
           </div>
           
           <div className="mb-5">
