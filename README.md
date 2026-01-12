@@ -45,6 +45,16 @@ npm start
 本项目依赖 Node.js 原生网络模块（TLS/Socket），**不支持** Edge Runtime。
 部署到 Vercel, EdgeOne Pages, Netlify 时，请确保使用默认的 Node.js Runtime。
 
+### GitHub Pages 部署指南
+本项目已配置 GitHub Actions 自动部署。
+
+1.  将代码推送到 GitHub 仓库。
+2.  在仓库设置 (Settings) -> Pages 中：
+    - **Source**: 选择 **GitHub Actions** (这一步很重要)。
+3.  如果是部署到子目录 (如 `https://yourname.github.io/repo-name/`)：
+    - 请修改 `.github/workflows/deploy.yml` 中的环境变量 `NEXT_PUBLIC_BASE_PATH`，将其设置为 `/repo-name`。
+4.  等待 Actions 运行完成即可。访问时会自动连接默认的 API 节点。
+
 ## 注意事项
 
 - 本工具仅用于学习和研究，不建议在生产环境中使用。

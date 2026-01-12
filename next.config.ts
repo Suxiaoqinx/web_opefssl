@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: process.env.NEXT_STATIC_EXPORT === 'true' ? 'export' : undefined,
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;
