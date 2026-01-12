@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { Card, Tag, Tooltip } from 'antd';
-import { Monitor, Smartphone, Globe, Terminal, Bot } from 'lucide-react';
+import { Tag } from 'antd';
+import { Monitor, Smartphone, Terminal, Bot } from 'lucide-react';
 
 interface ClientHandshakeSimulationProps {
     tls: any;
@@ -144,36 +144,38 @@ const ClientHandshakeSimulation: React.FC<ClientHandshakeSimulationProps> = ({ t
     if (!tls || !tls.supportedVersions) return null;
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {results.map((client, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-50/50 dark:bg-gray-800/20">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <div className="text-gray-400 shrink-0">
-                            {client.icon}
+        <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {results.map((client, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-50/50 dark:bg-gray-800/20">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="text-gray-400 shrink-0">
+                                {client.icon}
+                            </div>
+                            <span className="text-sm font-medium truncate" title={client.name}>
+                                {client.name}
+                            </span>
                         </div>
-                        <span className="text-sm font-medium truncate" title={client.name}>
-                            {client.name}
-                        </span>
+                        <div className="flex items-center shrink-0 ml-2">
+                            {client.status === 'success' && (
+                                <Tag color="success" className="mr-0 flex items-center gap-1">
+                                    {client.protocol}
+                                </Tag>
+                            )}
+                            {client.status === 'warning' && (
+                                <Tag color="warning" className="mr-0 flex items-center gap-1">
+                                    {client.protocol}
+                                </Tag>
+                            )}
+                            {client.status === 'fail' && (
+                                <Tag color="error" className="mr-0">
+                                    失败
+                                </Tag>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex items-center shrink-0 ml-2">
-                        {client.status === 'success' && (
-                            <Tag color="success" className="mr-0 flex items-center gap-1">
-                                {client.protocol}
-                            </Tag>
-                        )}
-                        {client.status === 'warning' && (
-                            <Tag color="warning" className="mr-0 flex items-center gap-1">
-                                {client.protocol}
-                            </Tag>
-                        )}
-                        {client.status === 'fail' && (
-                            <Tag color="error" className="mr-0">
-                                失败
-                            </Tag>
-                        )}
-                    </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 };

@@ -11,6 +11,7 @@ import CertificateDetails from '@/components/CertificateDetails';
 import TlsCipherSuite from '@/components/TlsCipherSuite';
 import HttpHeaders from '@/components/HttpHeaders';
 import ClientHandshakeSimulation from '@/components/ClientHandshakeSimulation';
+import CertificateCompatibility from '@/components/CertificateCompatibility';
 import ClientInfo from '@/components/ClientInfo';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -327,6 +328,13 @@ export default function Home() {
               <Col xs={24}>
                 <Card title="客户端握手模拟测试" variant="borderless" className="h-full shadow-sm">
                   <ClientHandshakeSimulation tls={result.tls} />
+                </Card>
+              </Col>
+
+              {/* Row 5: Certificate Compatibility */}
+              <Col xs={24}>
+                <Card title="证书兼容性测试 (基于根证书)" variant="borderless" className="h-full shadow-sm">
+                  <CertificateCompatibility certificate={result.certificate} />
                 </Card>
               </Col>
             </Row>
