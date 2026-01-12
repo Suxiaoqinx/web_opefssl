@@ -5,7 +5,6 @@ import tls from 'tls';
 import { URL } from 'url';
 import * as cheerio from 'cheerio';
 import dns from 'dns';
-import geoip from 'geoip-lite';
 
 // Helper to promisify dns.resolveCname
 const resolveCname = (hostname: string): Promise<string[]> => {
@@ -16,6 +15,27 @@ const resolveCname = (hostname: string): Promise<string[]> => {
         });
     });
 };
+
+async function fetchGeoIp(ip: string) {
+    if (!ip) return null;
+    try {
+        // Use ip-api.com for lightweight serverless-friendly lookup
+        const res = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (data.status !== 'success') return null;
+        return {
+            country: data.country,
+            region: data.regionName,
+            city: data.city,
+            timezone: data.timezone,
+            ll: [data.lat, data.lon]
+        };
+    } catch (e) {
+        console.error('GeoIP fetch failed', e);
+        return null;
+    }
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -58,7 +78,7 @@ export async function GET(request: Request) {
         // Combine GeoIP info if IP is available
         let geo = null;
         if (tlsData.site.ip) {
-            geo = geoip.lookup(tlsData.site.ip);
+            geo = await fetchGeoIp(tlsData.site.ip);
         }
 
         // Check for HTTP/3 via Alt-Svc
