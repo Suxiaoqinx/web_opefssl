@@ -5,6 +5,38 @@ import tls from 'tls';
 import { URL } from 'url';
 import * as cheerio from 'cheerio';
 import dns from 'dns';
+import crypto from 'crypto';
+
+// Rate Limiting Configuration
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 10; // 10 requests per minute
+const rateLimitMap = new Map<string, { count: number; expires: number }>();
+
+function checkRateLimit(ip: string) {
+    const now = Date.now();
+    
+    // Lazy cleanup: if map gets too big, clear it to prevent memory leaks
+    if (rateLimitMap.size > 5000) {
+        rateLimitMap.clear();
+    }
+    
+    const record = rateLimitMap.get(ip);
+    
+    if (!record || now > record.expires) {
+        rateLimitMap.set(ip, {
+            count: 1,
+            expires: now + RATE_LIMIT_WINDOW
+        });
+        return { allowed: true };
+    }
+    
+    if (record.count >= MAX_REQUESTS) {
+        return { allowed: false };
+    }
+    
+    record.count++;
+    return { allowed: true };
+}
 
 // Helper to promisify dns.resolveCname
 const resolveCname = (hostname: string): Promise<string[]> => {
@@ -37,12 +69,43 @@ async function fetchGeoIp(ip: string) {
     }
 }
 
-export async function GET(request: Request) {
-    const { searchParams } = new URL(request.url);
-    const targetUrl = searchParams.get('url');
+export async function POST(request: Request) {
+    // Rate Limit Check
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    if (ip !== 'unknown') {
+        const { allowed } = checkRateLimit(ip);
+        if (!allowed) {
+            return NextResponse.json(
+                { error: '请求过于频繁，请稍后再试 (Rate limit exceeded)' },
+                { status: 429 }
+            );
+        }
+    }
+
+    let body;
+    try {
+        body = await request.json();
+    } catch (e) {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { url: targetUrl, timestamp, hash } = body;
 
     if (!targetUrl) {
-        return NextResponse.json({ error: 'Missing "url" query parameter' }, { status: 400 });
+        return NextResponse.json({ error: 'Missing "url" parameter' }, { status: 400 });
+    }
+
+    // Hash verification
+    const secret = 'wyyapi-salt-2026';
+    const str = `${targetUrl}${timestamp}${secret}`;
+    const expectedHash = crypto.createHash('sha256').update(str).digest('hex');
+
+    if (hash !== expectedHash) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
+    }
+
+    if (!timestamp || Math.abs(Date.now() - Number(timestamp)) > 300000) {
+        return NextResponse.json({ error: 'Request expired or invalid timestamp' }, { status: 403 });
     }
 
     let parsedUrl: URL;

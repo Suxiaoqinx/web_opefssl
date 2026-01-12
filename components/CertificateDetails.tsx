@@ -1,6 +1,5 @@
 import React from 'react';
-import { DescriptionItem, DescriptionTable } from './ui/Descriptions';
-import Tag from './ui/Tag';
+import { Descriptions, Tag } from 'antd';
 
 interface Certificate {
     subject: Record<string, string>;
@@ -21,39 +20,56 @@ const CertificateDetails: React.FC<CertificateDetailsProps> = ({ certificate }) 
         return new Date(dateStr).toLocaleString();
     };
 
+    const getRemainingDays = (dateStr: string) => {
+        if (!dateStr) return null;
+        const validTo = new Date(dateStr).getTime();
+        const now = new Date().getTime();
+        const diff = validTo - now;
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    };
+
+    const remainingDays = getRemainingDays(certificate.valid_to);
+
     return (
-        <DescriptionTable>
-            <DescriptionItem label="颁发给 (Subject)">
+        <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="颁发给 (Subject)">
                 <div className="flex flex-wrap gap-2">
                     {certificate.subject && Object.entries(certificate.subject).map(([key, val]) => (
-                        <Tag key={key} effect="light">
+                        <Tag key={key} color="blue" className="py-1" style={{ whiteSpace: 'normal', wordBreak: 'break-all', height: 'auto' }}>
                             {key}: {val}
                         </Tag>
                     ))}
                 </div>
-            </DescriptionItem>
-            <DescriptionItem label="颁发者 (Issuer)">
+            </Descriptions.Item>
+            <Descriptions.Item label="颁发者 (Issuer)">
                 <div className="flex flex-wrap gap-2">
                     {certificate.issuer && Object.entries(certificate.issuer).map(([key, val]) => (
-                        <Tag key={key} type="info" effect="plain">
+                        <Tag key={key} className="py-1" style={{ whiteSpace: 'normal', wordBreak: 'break-all', height: 'auto' }}>
                             {key}: {val}
                         </Tag>
                     ))}
                 </div>
-            </DescriptionItem>
-            <DescriptionItem label="有效期开始">
+            </Descriptions.Item>
+            <Descriptions.Item label="有效期开始">
                 {formatDate(certificate.valid_from)}
-            </DescriptionItem>
-            <DescriptionItem label="有效期结束">
+            </Descriptions.Item>
+            <Descriptions.Item label="有效期结束">
                 {formatDate(certificate.valid_to)}
-            </DescriptionItem>
-            <DescriptionItem label="序列号">
-                {certificate.serialNumber}
-            </DescriptionItem>
-            <DescriptionItem label="指纹">
-                {certificate.fingerprint}
-            </DescriptionItem>
-        </DescriptionTable>
+            </Descriptions.Item>
+            {remainingDays !== null && (
+                <Descriptions.Item label="剩余天数">
+                    <Tag color={remainingDays > 30 ? 'success' : remainingDays > 7 ? 'warning' : 'error'}>
+                        {remainingDays > 0 ? `${remainingDays} 天` : `已过期 ${Math.abs(remainingDays)} 天`}
+                    </Tag>
+                </Descriptions.Item>
+            )}
+            <Descriptions.Item label="序列号">
+                <span style={{ wordBreak: 'break-all' }}>{certificate.serialNumber}</span>
+            </Descriptions.Item>
+            <Descriptions.Item label="指纹">
+                <span style={{ wordBreak: 'break-all' }}>{certificate.fingerprint}</span>
+            </Descriptions.Item>
+        </Descriptions>
     );
 };
 

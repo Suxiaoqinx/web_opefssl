@@ -1,6 +1,5 @@
 import React from 'react';
-import { DescriptionItem, DescriptionTable } from './ui/Descriptions';
-import Tag from './ui/Tag';
+import { Descriptions, Tag } from 'antd';
 
 interface TlsVersion {
     version: string;
@@ -37,20 +36,18 @@ const TlsCipherSuite: React.FC<TlsCipherSuiteProps> = ({ tls }) => {
     };
 
     return (
-        <DescriptionTable>
-            <DescriptionItem label="当前协议版本">
+        <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="当前协议版本">
                 {tls.version}
-            </DescriptionItem>
+            </Descriptions.Item>
 
-            <DescriptionItem label="支持的协议版本">
+            <Descriptions.Item label="支持的协议版本">
                 {tls.supportedVersions && tls.supportedVersions.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                         {tls.supportedVersions.map((ver) => (
                             <Tag 
                                 key={ver.version}
-                                type={ver.supported ? 'success' : 'info'}
-                                effect={ver.supported ? 'dark' : 'plain'}
-                                round
+                                color={ver.supported ? 'success' : 'default'}
                             >
                                 {formatTlsVersion(ver.version)}
                             </Tag>
@@ -59,19 +56,19 @@ const TlsCipherSuite: React.FC<TlsCipherSuiteProps> = ({ tls }) => {
                 ) : (
                     <span>暂无数据</span>
                 )}
-            </DescriptionItem>
+            </Descriptions.Item>
 
-            <DescriptionItem label="加密套件名称">
-                {tls.cipher.name}
-            </DescriptionItem>
+            <Descriptions.Item label="加密套件名称">
+                <span className="break-all font-mono text-gray-800 dark:text-white">{tls.cipher.name}</span>
+            </Descriptions.Item>
 
-            <DescriptionItem label="标准名称">
-                {tls.cipher.standardName}
-            </DescriptionItem>
+            <Descriptions.Item label="标准名称">
+                <span className="break-all font-mono text-gray-600 dark:text-gray-300">{tls.cipher.standardName}</span>
+            </Descriptions.Item>
 
-            <DescriptionItem label="授权状态">
+            <Descriptions.Item label="授权状态">
                 <div className="flex items-center">
-                    <Tag type={tls.authorized ? 'success' : 'danger'}>
+                    <Tag color={tls.authorized ? 'success' : 'error'}>
                         {tls.authorized ? 'Authorized' : 'Unauthorized'}
                     </Tag>
                     {tls.authorizationError && (
@@ -80,8 +77,8 @@ const TlsCipherSuite: React.FC<TlsCipherSuiteProps> = ({ tls }) => {
                         </span>
                     )}
                 </div>
-            </DescriptionItem>
-        </DescriptionTable>
+            </Descriptions.Item>
+        </Descriptions>
     );
 };
 

@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User, Clock, Trash2, Search, Github, Globe, FileText } from 'lucide-react';
+import { User, Clock, Trash2, Github, MapPin } from 'lucide-react';
+import { Input, Button, Card, Alert, Row, Col, Typography, Space, message } from 'antd';
 import SiteInfo from '@/components/SiteInfo';
 import ConnectionSupport from '@/components/ConnectionSupport';
 import ConnectionLatency from '@/components/ConnectionLatency';
 import CertificateDetails from '@/components/CertificateDetails';
 import TlsCipherSuite from '@/components/TlsCipherSuite';
 import HttpHeaders from '@/components/HttpHeaders';
-import { Card } from '@/components/ui/Card';
-import Tag from '@/components/ui/Tag';
+import ThemeToggle from '@/components/ThemeToggle';
+
+const { Title, Text } = Typography;
+const { Search } = Input;
 
 // Types
 interface CheckResult {
@@ -32,11 +35,14 @@ const commonSites = [
 ];
 
 export default function Home() {
+  const [messageApi, contextHolder] = message.useMessage();
   const [targetUrl, setTargetUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
   const [error, setError] = useState('');
   const [history, setHistory] = useState<string[]>([]);
+  const [nodeInfo, setNodeInfo] = useState<any>(null);
+  const [nodeLoading, setNodeLoading] = useState(true);
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('tls_check_history');
@@ -47,6 +53,30 @@ export default function Home() {
         console.error('Failed to parse history', e);
       }
     }
+
+    // Fetch node info
+    const fetchNodeInfo = async () => {
+      setNodeLoading(true);
+      try {
+        const timestamp = Date.now();
+        const secret = 'wyyapi-salt-2026';
+        const str = `${timestamp}${secret}`;
+        const encoder = new TextEncoder();
+        const data = encoder.encode(str);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const res = await axios.post('/api/node-info', { timestamp, hash });
+        setNodeInfo(res.data);
+      } catch (err) {
+        console.error('Failed to fetch node info', err);
+      } finally {
+        setNodeLoading(false);
+      }
+    };
+    
+    fetchNodeInfo();
   }, []);
 
   const addToHistory = (url: string) => {
@@ -70,16 +100,16 @@ export default function Home() {
 
   const fillAndCheck = (url: string) => {
     setTargetUrl(url);
-    // Use setTimeout to allow state update before checking (though not strictly needed if we pass url to checkUrl)
-    // But better to call checkUrl with the value directly
     checkUrl(url);
   };
 
   const checkUrl = async (urlOverride?: string) => {
-    let urlToCheck = (urlOverride || targetUrl).trim();
+    // If urlOverride is a string, use it; otherwise use targetUrl
+    // Note: antd Search onSearch passes value as first arg
+    let urlToCheck = (typeof urlOverride === 'string' ? urlOverride : targetUrl).trim();
+    
     if (!urlToCheck) {
-      // Could use a toast here
-      alert('请输入目标网址');
+      // Antd message could be used here but we'll stick to Alert for now or just return
       return;
     }
 
@@ -94,9 +124,23 @@ export default function Home() {
     setResult(null);
 
     try {
-      const response = await axios.get(`/api/check?url=${encodeURIComponent(urlToCheck)}`);
+      const timestamp = Date.now();
+      const secret = 'wyyapi-salt-2026';
+      const str = `${urlToCheck}${timestamp}${secret}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const response = await axios.post('/api/check', {
+        url: urlToCheck,
+        timestamp,
+        hash
+      });
       setResult(response.data);
       addToHistory(urlToCheck);
+      messageApi.success('检测完成');
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.error) {
@@ -110,54 +154,63 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f7fa] p-5 font-sans">
+    <div className="min-h-screen bg-background text-foreground p-5 font-sans transition-colors duration-300">
+      {contextHolder}
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 mt-10">
-          <h1 className="text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">网站安全检测工具</h1>
-          <p className="text-base text-slate-500">即时分析 HTTP 版本、TLS 支持和证书详情。</p>
+        <div className="text-center mb-10 relative">
+          <div className="absolute right-0 top-0">
+            <ThemeToggle />
+          </div>
+          <Title level={1} style={{ marginBottom: 8 }}>网站安全检测工具</Title>
+          <Text type="secondary" className="text-base">即时分析 HTTP 版本、TLS 支持和证书详情。</Text>
+          
+          {(nodeInfo || nodeLoading) && (
+            <div className="mt-4 px-4 flex justify-center items-start sm:items-center text-gray-500 text-sm animate-pulse">
+               <MapPin size={14} className="mr-1.5 text-blue-500 shrink-0 mt-1 sm:mt-0" />
+               <span className="text-left sm:text-center break-words leading-tight">
+                 {nodeLoading ? (
+                   '正在获取探测节点信息...'
+                 ) : (
+                   `探测节点: ${nodeInfo.country} ${nodeInfo.regionName} ${nodeInfo.city}`
+                 )}
+               </span>
+            </div>
+          )}
         </div>
 
         {/* Search Card */}
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 mb-5">
+        <Card className="mb-5 shadow-sm" variant="borderless">
           <div className="mb-5">
-            <h3 className="text-lg font-bold m-0 mb-1">输入网站 URL</h3>
-            <p className="text-gray-400 text-sm">必须包含 http:// 或 https://，且不跟随重定向</p>
+            <Title level={4} style={{ margin: 0, marginBottom: 4 }}>输入网站 URL</Title>
+            <Text type="secondary" className="text-sm">必须包含 http:// 或 https://，且不跟随重定向</Text>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 mb-5">
-            <div className="relative flex-1">
-                <input 
-                    type="text" 
-                    value={targetUrl}
-                    onChange={(e) => setTargetUrl(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && checkUrl()}
-                    placeholder="https://example.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-10"
-                />
-            </div>
-            <button 
-                onClick={() => checkUrl()}
-                disabled={loading}
-                className="bg-black hover:bg-gray-800 text-white font-bold py-2 px-6 rounded h-10 transition-colors disabled:opacity-70 flex items-center justify-center min-w-[100px]"
-            >
-                {loading ? '检测中...' : '开始检测'}
-            </button>
+          <div className="mb-5">
+             <Search
+                placeholder="https://example.com"
+                enterButton={loading ? "检测中..." : "开始检测"}
+                size="large"
+                loading={loading}
+                onSearch={checkUrl}
+                value={targetUrl}
+                onChange={(e) => setTargetUrl(e.target.value)}
+             />
           </div>
 
           <div className="mt-4">
-            <p className="text-gray-400 text-sm mb-2 flex items-center">常用检测</p>
-            <div className="flex flex-wrap gap-2">
+            <Text type="secondary" className="text-sm mb-2 block">常用检测</Text>
+            <Space wrap>
               {commonSites.map((site) => (
-                <button 
+                <Button 
                   key={site.url}
                   onClick={() => fillAndCheck(site.url)}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm text-gray-600 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                  size="small"
                 >
                   {site.name}
-                </button>
+                </Button>
               ))}
-            </div>
+            </Space>
           </div>
 
           {history.length > 0 && (
@@ -166,87 +219,96 @@ export default function Home() {
                  <span className="text-gray-400 text-sm flex items-center">
                     <Clock size={14} className="mr-1" /> 历史记录
                  </span>
-                 <button 
+                 <Button 
+                    type="text" 
+                    danger 
+                    size="small" 
+                    icon={<Trash2 size={14} />} 
                     onClick={clearHistory}
-                    className="text-gray-400 text-sm hover:text-red-500 flex items-center transition-colors"
                  >
-                    <Trash2 size={14} className="mr-1" /> 清空
-                 </button>
+                    清空
+                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <Space wrap>
                 {history.map((url) => (
-                  <button 
+                  <Button 
                     key={url}
                     onClick={() => fillAndCheck(url)}
-                    className="px-3 py-1 bg-white border border-gray-300 rounded-full text-sm text-gray-600 hover:text-blue-500 hover:border-blue-300 hover:bg-blue-50 transition-all"
+                    size="small"
                   >
-                    {url}
-                  </button>
+                    {url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                  </Button>
                 ))}
-              </div>
+              </Space>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-5 flex items-center" role="alert">
-            <span className="block sm:inline">{error}</span>
-          </div>
+          <Alert
+            message="检测失败"
+            description={error}
+            type="error"
+            showIcon
+            closable
+            onClose={() => setError('')}
+            className="mb-5"
+          />
         )}
 
         {/* Results Grid */}
         {result && (
           <div className="mt-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <Row gutter={[20, 20]}>
               {/* Row 1 */}
-              <div className="md:col-span-1">
-                <Card title="站点信息">
+              <Col xs={24} md={12}>
+                <Card title="站点信息" variant="borderless" className="h-full shadow-sm">
                   <SiteInfo site={result.site} target={result.site.title || targetUrl} />
                 </Card>
-              </div>
-              <div className="md:col-span-1">
-                <Card title="连接支持">
-                  <ConnectionSupport http={result.http} tls={result.tls} />
+              </Col>
+              <Col xs={24} md={12}>
+                <Card title="连接支持" variant="borderless" className="h-full shadow-sm">
+                  <ConnectionSupport http={result.http} tls={result.tls} onCheckUrl={fillAndCheck} />
                 </Card>
-              </div>
+              </Col>
 
               {/* Row 2 */}
-              <div className="md:col-span-1">
-                <Card title="连接耗时">
+              <Col xs={24} md={12}>
+                <Card title="连接耗时" variant="borderless" className="h-full shadow-sm">
                   <ConnectionLatency timing={result.timing} />
                 </Card>
-              </div>
-              <div className="md:col-span-1">
-                <Card title="TLS/加密套件">
+              </Col>
+              <Col xs={24} md={12}>
+                <Card title="TLS/加密套件" variant="borderless" className="h-full shadow-sm">
                   <TlsCipherSuite tls={result.tls} />
                 </Card>
-              </div>
+              </Col>
 
               {/* Row 3 */}
-              <div className="md:col-span-1">
-                <Card title="证书详情">
+              <Col xs={24} md={12}>
+                <Card title="证书详情" variant="borderless" className="h-full shadow-sm">
                   <CertificateDetails certificate={result.certificate} />
                 </Card>
-              </div>
-              <div className="md:col-span-1">
-                <Card title="HTTP 头部">
+              </Col>
+              <Col xs={24} md={12}>
+                <Card title="HTTP 头部" variant="borderless" className="h-full shadow-sm">
                   <HttpHeaders headers={result.http.headers} />
                 </Card>
-              </div>
-            </div>
+              </Col>
+            </Row>
           </div>
         )}
 
         {/* Footer */}
-        <div className="text-center mt-12 pb-8 text-gray-400 text-sm border-t border-gray-200 pt-5">
+        <div className="text-center mt-12 pb-8 text-gray-400 text-sm border-t border-gray-200 dark:border-gray-800 pt-5">
           <p className="mb-2">&copy; {new Date().getFullYear()} 网站安全检测工具. All rights reserved.</p>
           <div className="flex justify-center items-center gap-4">
             <a href="https://github.com/Suxiaoqinx/web_opefssl" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-blue-500 transition-colors">
               <Github size={14} className="mr-1" />
               开源项目
             </a>
-            <span className="border-l border-gray-300 h-3 mx-1"></span>
+            <span className="border-l border-gray-300 dark:border-gray-700 h-3 mx-1"></span>
             <a href="https://github.com/Suxiaoqinx" target="_blank" rel="noopener noreferrer" className="flex items-center hover:text-blue-500 transition-colors">
               <User size={14} className="mr-1" />
               作者主页

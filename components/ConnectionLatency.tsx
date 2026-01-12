@@ -1,6 +1,5 @@
 import React from 'react';
-import { DescriptionItem, DescriptionTable } from './ui/Descriptions';
-import { cn } from '@/lib/utils';
+import { Descriptions, Progress } from 'antd';
 
 interface Timing {
     dns: number;
@@ -22,46 +21,72 @@ const ConnectionLatency: React.FC<ConnectionLatencyProps> = ({ timing }) => {
         return (value / total) * 100;
     };
 
-    const TimingRow = ({ label, value, colorClass }: { label: string, value: number, colorClass: string }) => (
-        <DescriptionItem label={label}>
-            <div className="flex items-center w-full">
-                <div className="flex-1 h-2 bg-gray-100 rounded overflow-hidden mr-4 max-w-[300px]">
-                    <div 
-                        className={cn("h-full rounded transition-all duration-500", colorClass)}
-                        style={{ width: `${getTimingPercent(value, timing.total)}%` }}
-                    />
-                </div>
-                <span className="w-[60px] text-right text-gray-600 text-sm">{value}ms</span>
-            </div>
-        </DescriptionItem>
-    );
-
     return (
-        <DescriptionTable>
-            <TimingRow 
-                label="DNS 解析" 
-                value={timing.dns} 
-                colorClass="bg-blue-500" 
-            />
-            <TimingRow 
-                label="TCP 连接" 
-                value={timing.tcp} 
-                colorClass="bg-yellow-500" 
-            />
-            <TimingRow 
-                label="TLS 握手" 
-                value={timing.tls} 
-                colorClass="bg-purple-600" 
-            />
-            <TimingRow 
-                label="TTFB (首字节)" 
-                value={timing.ttfb} 
-                colorClass="bg-green-500" 
-            />
-            <DescriptionItem label="总计耗时">
-                <span className="text-base font-bold text-gray-800">{timing.total}ms</span>
-            </DescriptionItem>
-        </DescriptionTable>
+        <Descriptions bordered column={1} size="small">
+            <Descriptions.Item label="DNS 解析">
+                <div className="flex items-center w-full">
+                    <div className="flex-1 mr-4 max-w-[300px]">
+                        <Progress 
+                            percent={getTimingPercent(timing.dns, timing.total)} 
+                            showInfo={false} 
+                            strokeColor="#1890ff"
+                            size="small"
+                            status="active"
+                        />
+                    </div>
+                    <span className="w-[60px] text-right text-gray-600 dark:text-gray-400 text-sm">{timing.dns}ms</span>
+                </div>
+            </Descriptions.Item>
+            
+            <Descriptions.Item label="TCP 连接">
+                <div className="flex items-center w-full">
+                    <div className="flex-1 mr-4 max-w-[300px]">
+                        <Progress 
+                            percent={getTimingPercent(timing.tcp, timing.total)} 
+                            showInfo={false} 
+                            strokeColor="#faad14"
+                            size="small"
+                            status="active"
+                        />
+                    </div>
+                    <span className="w-[60px] text-right text-gray-600 dark:text-gray-400 text-sm">{timing.tcp}ms</span>
+                </div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label="TLS 握手">
+                <div className="flex items-center w-full">
+                    <div className="flex-1 mr-4 max-w-[300px]">
+                        <Progress 
+                            percent={getTimingPercent(timing.tls, timing.total)} 
+                            showInfo={false} 
+                            strokeColor="#722ed1"
+                            size="small"
+                            status="active"
+                        />
+                    </div>
+                    <span className="w-[60px] text-right text-gray-600 dark:text-gray-400 text-sm">{timing.tls}ms</span>
+                </div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label="TTFB (首字节)">
+                <div className="flex items-center w-full">
+                    <div className="flex-1 mr-4 max-w-[300px]">
+                        <Progress 
+                            percent={getTimingPercent(timing.ttfb, timing.total)} 
+                            showInfo={false} 
+                            strokeColor="#52c41a"
+                            size="small"
+                            status="active"
+                        />
+                    </div>
+                    <span className="w-[60px] text-right text-gray-600 dark:text-gray-400 text-sm">{timing.ttfb}ms</span>
+                </div>
+            </Descriptions.Item>
+
+            <Descriptions.Item label="总计耗时">
+                <span className="text-base font-bold text-gray-800 dark:text-gray-200">{timing.total}ms</span>
+            </Descriptions.Item>
+        </Descriptions>
     );
 };
 

@@ -1,6 +1,7 @@
-import React from 'react';
-import { DescriptionTable, DescriptionItem } from './ui/Descriptions';
-import { Tag } from './ui/Tag';
+import React, { useState, useEffect } from 'react';
+import { Descriptions, Tag, Typography, Avatar } from 'antd';
+
+const { Title } = Typography;
 
 interface SiteInfoProps {
   site: any;
@@ -8,49 +9,61 @@ interface SiteInfoProps {
 }
 
 const SiteInfo: React.FC<SiteInfoProps> = ({ site, target }) => {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [site.favicon]);
+
   return (
     <div className="site-info-header">
       <div className="flex items-center mb-4">
-        {site.favicon && (
-          <img 
+        {site.favicon && !imgError && (
+          <Avatar 
             src={site.favicon} 
-            className="w-8 h-8 mr-4 rounded" 
-            alt="icon" 
-            onError={(e) => (e.currentTarget.style.display = 'none')}
+            shape="square" 
+            size="large" 
+            className="mr-4 flex-shrink-0"
+            onError={() => {
+                setImgError(true);
+                return false;
+            }}
           />
         )}
-        <h2 className="m-0 text-2xl font-bold text-gray-800">{site.title || target}</h2>
+        <Title level={4} style={{ margin: 0 }} ellipsis={{ tooltip: site.title || target }}>
+            {site.title || target}
+        </Title>
       </div>
       
-      <DescriptionTable>
+      <Descriptions bordered column={1} size="small">
          {site.description && (
-             <DescriptionItem label="站点描述">
+             <Descriptions.Item label="站点描述">
                  {site.description}
-             </DescriptionItem>
+             </Descriptions.Item>
          )}
          
-         <DescriptionItem label="服务器 IP">
+         <Descriptions.Item label="服务器 IP">
              <span className="font-mono">{site.ip}</span>
-         </DescriptionItem>
+         </Descriptions.Item>
          
-         <DescriptionItem label="CNAME">
+         <Descriptions.Item label="CNAME">
              <span className="font-mono">{site.cname}</span>
-         </DescriptionItem>
+         </Descriptions.Item>
          
          {site.geo && (
-             <DescriptionItem label="地理位置">
+             <Descriptions.Item label="地理位置">
                  <div className="flex flex-wrap gap-2">
-                     {site.geo.country && <Tag effect="plain" round>{site.geo.country}</Tag>}
-                     {site.geo.region && <Tag effect="plain" round>{site.geo.region}</Tag>}
-                     {site.geo.city && <Tag effect="plain" round>{site.geo.city}</Tag>}
+                     {site.geo.country && <Tag>{site.geo.country}</Tag>}
+                     {site.geo.region && <Tag>{site.geo.region}</Tag>}
+                     {site.geo.city && <Tag>{site.geo.city}</Tag>}
                  </div>
-             </DescriptionItem>
+             </Descriptions.Item>
          )}
          
-         <DescriptionItem label="Web 服务器">
-             <Tag effect="light" round className="ml-auto">{site.server}</Tag>
-         </DescriptionItem>
-      </DescriptionTable>
+         <Descriptions.Item label="Web 服务器">
+             <Tag color="blue">{site.server}</Tag>
+         </Descriptions.Item>
+      </Descriptions>
     </div>
   );
 };
