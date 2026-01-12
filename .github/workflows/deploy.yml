@@ -26,12 +26,12 @@ jobs:
         with:
           node-version: "20"
           cache: 'npm'
-          cache-dependency-path: next-web/package-lock.json
+          cache-dependency-path: next-web/package*.json
 
       - name: Install Dependencies
         run: |
           cd next-web
-          npm ci
+          npm install
 
       - name: Remove API Routes for Static Export
         run: |
