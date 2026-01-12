@@ -38,6 +38,7 @@ const commonSites = [
 
 const apiNodes = [
   { label: '海外节点', value: 'https://http-vercel.toubiec.cn' },
+  { label: '国内节点', value: 'https://http.toubiec.cn' },
   { label: '本地节点', value: '' },
 ];
 
