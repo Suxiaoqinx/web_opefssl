@@ -247,7 +247,8 @@ function checkTls(parsedUrl: URL, metaData: any = {}) {
                     version: socket.getProtocol(),
                     cipher: socket.getCipher(),
                     authorized: socket.authorized,
-                    authorizationError: socket.authorizationError
+                    authorizationError: socket.authorizationError,
+                    sni: true // Node.js https client sends SNI by default
                 };
             } catch (e) {
                 console.error("Error parsing cert/tls info", e);

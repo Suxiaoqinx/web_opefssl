@@ -10,6 +10,8 @@ import ConnectionLatency from '@/components/ConnectionLatency';
 import CertificateDetails from '@/components/CertificateDetails';
 import TlsCipherSuite from '@/components/TlsCipherSuite';
 import HttpHeaders from '@/components/HttpHeaders';
+import ClientHandshakeSimulation from '@/components/ClientHandshakeSimulation';
+import ClientInfo from '@/components/ClientInfo';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const { Title, Text } = Typography;
@@ -244,6 +246,11 @@ export default function Home() {
           )}
         </Card>
 
+        {/* Client Info */}
+        <div className="mb-5 mt-5">
+          <ClientInfo />
+        </div>
+
         {/* Error Alert */}
         {error && (
           <Alert
@@ -294,6 +301,13 @@ export default function Home() {
               <Col xs={24} md={12}>
                 <Card title="HTTP 头部" variant="borderless" className="h-full shadow-sm">
                   <HttpHeaders headers={result.http.headers} />
+                </Card>
+              </Col>
+
+              {/* Row 4: Client Simulation */}
+              <Col xs={24}>
+                <Card title="客户端握手模拟测试" variant="borderless" className="h-full shadow-sm">
+                  <ClientHandshakeSimulation tls={result.tls} />
                 </Card>
               </Col>
             </Row>

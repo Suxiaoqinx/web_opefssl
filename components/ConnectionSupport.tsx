@@ -143,6 +143,14 @@ const ConnectionSupport: React.FC<ConnectionSupportProps> = ({ http, tls, onChec
                 {tls.cipher.name} ({tls.version})
             </span>
         </Descriptions.Item>
+
+        <Descriptions.Item label="启用SNI">
+            {tls && tls.sni ? (
+                <Tag color="success">是</Tag>
+            ) : (
+                <Tag color="default">否</Tag>
+            )}
+        </Descriptions.Item>
       </Descriptions>
     );
 };
