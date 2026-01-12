@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: process.env.NEXT_STATIC_EXPORT === 'true' ? 'export' : undefined,
-  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
-  assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
-  images: {
-    unoptimized: true,
-  },
+  // output: 'export', // 解开注释以支持 Cloudflare Pages 静态部署 (需同时移除 app/api 目录)
 };
 
 export default nextConfig;
