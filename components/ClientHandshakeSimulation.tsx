@@ -145,7 +145,7 @@ const ClientHandshakeSimulation: React.FC<ClientHandshakeSimulationProps> = ({ t
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {results.map((client, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg bg-gray-50/50 dark:bg-gray-800/20">
                         <div className="flex items-center gap-2 min-w-0">

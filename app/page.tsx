@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Clock, Trash2, Github, MapPin } from 'lucide-react';
-import { Input, Button, Card, Alert, Row, Col, Typography, Space, message, Select } from 'antd';
+import { Input, Button, Card, Alert, Row, Col, Typography, Space, message, Select, Spin, notification } from 'antd';
 import SiteInfo from '@/components/SiteInfo';
 import ConnectionSupport from '@/components/ConnectionSupport';
 import ConnectionLatency from '@/components/ConnectionLatency';
@@ -44,7 +44,7 @@ const apiNodes = [
 ];
 
 export default function Home() {
-  const [messageApi, contextHolder] = message.useMessage();
+  const [notificationApi, contextHolder] = notification.useNotification();
   const [targetUrl, setTargetUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -52,7 +52,7 @@ export default function Home() {
   const [history, setHistory] = useState<string[]>([]);
   const [nodeInfo, setNodeInfo] = useState<any>(null);
   const [nodeLoading, setNodeLoading] = useState(true);
-  const [apiNode, setApiNode] = useState('https://http-vercel.toubiec.cn');
+  const [apiNode, setApiNode] = useState('');
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('tls_check_history');
@@ -146,14 +146,25 @@ export default function Home() {
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const response = await axios.post(`${apiNode}/api/check`, {
-        url: urlToCheck,
-        timestamp,
-        hash
-      });
+      const [response] = await Promise.all([
+        axios.post(`${apiNode}/api/check`, {
+          url: urlToCheck,
+          timestamp,
+          hash
+        }),
+        new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 2000) + 1000))
+      ]);
+
       setResult(response.data);
       addToHistory(urlToCheck);
-      messageApi.success('检测完成');
+
+      notificationApi.success({
+        message: '检测完成',
+        description: '已成功获取目标站点信息',
+        placement: 'topRight',
+        duration: 3,
+      });
+
     } catch (err: any) {
       console.error(err);
       if (err.response && err.response.data && err.response.data.error) {
@@ -172,9 +183,6 @@ export default function Home() {
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
         <div className="text-center mb-10 relative">
-          <div className="absolute right-0 top-0">
-            <ThemeToggle />
-          </div>
           <Title level={1} style={{ marginBottom: 8 }}>网站安全检测工具</Title>
           <Text type="secondary" className="text-base">即时分析 HTTP 版本、TLS 支持和证书详情。</Text>
           
@@ -271,6 +279,17 @@ export default function Home() {
           <ClientInfo />
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="mt-5">
+             <Card className="shadow-sm text-center py-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                <Spin size="large" />
+                <div className="mt-6 text-lg font-medium text-gray-700 dark:text-gray-200">正在全面检测中...</div>
+                <div className="mt-2 text-gray-500 dark:text-gray-400">正在分析目标站点的 HTTPS 配置、证书详情及客户端兼容性</div>
+             </Card>
+          </div>
+        )}
+
         {/* Error Alert */}
         {error && (
           <Alert
@@ -356,11 +375,12 @@ export default function Home() {
             </a>
           </div>
           <div className="mt-2 text-xs opacity-75">
-             <span className="mr-3">Version 0.1.0</span>
+             <span className="mr-3">Version 0.2.0</span>
              <span>当前节点: {apiNodes.find(n => n.value === apiNode)?.label || '未知节点'}</span>
           </div>
         </div>
       </div>
+      <ThemeToggle />
     </div>
   );
 }
