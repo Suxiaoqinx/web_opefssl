@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Clock, Trash2, Github, MapPin } from 'lucide-react';
-import { Input, Button, Card, Alert, Row, Col, Typography, Space, message, Select, Spin, notification } from 'antd';
+import { Input, Button, Card, Alert, Row, Col, Typography, Space, message, Select, Spin, notification, Tabs } from 'antd';
 import SiteInfo from '@/components/SiteInfo';
 import ConnectionSupport from '@/components/ConnectionSupport';
 import ConnectionLatency from '@/components/ConnectionLatency';
@@ -14,6 +14,7 @@ import ClientHandshakeSimulation from '@/components/ClientHandshakeSimulation';
 import CertificateCompatibility from '@/components/CertificateCompatibility';
 import ClientInfo from '@/components/ClientInfo';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useTheme } from '@/components/ThemeProvider';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -44,6 +45,7 @@ const apiNodes = [
 ];
 
 export default function Home() {
+  const { layoutMode } = useTheme();
   const [notificationApi, contextHolder] = notification.useNotification();
   const [targetUrl, setTargetUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -306,57 +308,149 @@ export default function Home() {
         {/* Results Grid */}
         {result && (
           <div className="mt-5">
-            <Row gutter={[20, 20]}>
-              {/* Row 1 */}
-              <Col xs={24} md={12}>
-                <Card title="站点信息" variant="borderless" className="h-full shadow-sm">
-                  <SiteInfo site={result.site} target={result.site.title || targetUrl} />
-                </Card>
-              </Col>
-              <Col xs={24} md={12}>
-                <Card title="连接支持" variant="borderless" className="h-full shadow-sm">
-                  <ConnectionSupport http={result.http} tls={result.tls} onCheckUrl={fillAndCheck} />
-                </Card>
-              </Col>
+            {layoutMode === 'grid' ? (
+              <Row gutter={[20, 20]}>
+                {/* Row 1 */}
+                <Col xs={24} md={12}>
+                  <Card title="站点信息" variant="borderless" className="h-full shadow-sm">
+                    <SiteInfo site={result.site} target={result.site.title || targetUrl} />
+                  </Card>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Card title="连接支持" variant="borderless" className="h-full shadow-sm">
+                    <ConnectionSupport http={result.http} tls={result.tls} onCheckUrl={fillAndCheck} />
+                  </Card>
+                </Col>
 
-              {/* Row 2 */}
-              <Col xs={24} md={12}>
-                <Card title="连接耗时" variant="borderless" className="h-full shadow-sm">
-                  <ConnectionLatency timing={result.timing} />
-                </Card>
-              </Col>
-              <Col xs={24} md={12}>
-                <Card title="TLS/加密套件" variant="borderless" className="h-full shadow-sm">
-                  <TlsCipherSuite tls={result.tls} />
-                </Card>
-              </Col>
+                {/* Row 2 */}
+                <Col xs={24} md={12}>
+                  <Card title="连接耗时" variant="borderless" className="h-full shadow-sm">
+                    <ConnectionLatency timing={result.timing} />
+                  </Card>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Card title="TLS/加密套件" variant="borderless" className="h-full shadow-sm">
+                    <TlsCipherSuite tls={result.tls} />
+                  </Card>
+                </Col>
 
-              {/* Row 3 */}
-              <Col xs={24} md={12}>
-                <Card title="证书详情" variant="borderless" className="h-full shadow-sm">
-                  <CertificateDetails certificate={result.certificate} />
-                </Card>
-              </Col>
-              <Col xs={24} md={12}>
-                <Card title="HTTP 头部" variant="borderless" className="h-full shadow-sm">
-                  <HttpHeaders headers={result.http.headers} />
-                </Card>
-              </Col>
+                {/* Row 3 */}
+                <Col xs={24} md={12}>
+                  <Card title="证书详情" variant="borderless" className="h-full shadow-sm">
+                    <CertificateDetails certificate={result.certificate} />
+                  </Card>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Card title="HTTP 头部" variant="borderless" className="h-full shadow-sm">
+                    <HttpHeaders headers={result.http.headers} />
+                  </Card>
+                </Col>
 
-              {/* Row 4: Client Simulation */}
-              <Col xs={24}>
-                <Card title="客户端握手模拟测试" variant="borderless" className="h-full shadow-sm">
-                  <ClientHandshakeSimulation tls={result.tls} />
-                </Card>
-              </Col>
+                {/* Row 4: Client Simulation */}
+                <Col xs={24}>
+                  <Card title="客户端握手模拟测试" variant="borderless" className="h-full shadow-sm">
+                    <ClientHandshakeSimulation tls={result.tls} />
+                  </Card>
+                </Col>
 
-              {/* Row 5: Certificate Compatibility */}
-              <Col xs={24}>
-                <Card title="证书兼容性测试 (基于根证书)" variant="borderless" className="h-full shadow-sm">
-                  <CertificateCompatibility certificate={result.certificate} />
-                </Card>
-              </Col>
-            </Row>
+                {/* Row 5: Certificate Compatibility */}
+                <Col xs={24}>
+                  <Card title="证书兼容性测试 (基于根证书)" variant="borderless" className="h-full shadow-sm">
+                    <CertificateCompatibility certificate={result.certificate} />
+                  </Card>
+                </Col>
+              </Row>
+            ) : (
+              <Card className="shadow-sm" bodyStyle={{ padding: '0' }}>
+                <Tabs
+                  defaultActiveKey="overview"
+                  size="large"
+                  tabBarStyle={{ padding: '0 24px', marginBottom: 0 }}
+                  items={[
+                    {
+                      label: '概览',
+                      key: 'overview',
+                      children: (
+                        <div className="p-6 bg-gray-50 dark:bg-gray-900/30" style={{ padding: '24px' }}>
+                          <Row gutter={[20, 20]}>
+                            <Col xs={24} md={12}>
+                              <Card title="站点信息" variant="borderless" className="h-full shadow-sm">
+                                <SiteInfo site={result.site} target={result.site.title || targetUrl} />
+                              </Card>
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Card title="连接支持" variant="borderless" className="h-full shadow-sm">
+                                <ConnectionSupport http={result.http} tls={result.tls} onCheckUrl={fillAndCheck} />
+                              </Card>
+                            </Col>
+                          </Row>
+                        </div>
+                      )
+                    },
+                    {
+                      label: '性能',
+                      key: 'performance',
+                      children: (
+                         <div className="p-6 bg-gray-50 dark:bg-gray-900/30" style={{ padding: '24px' }}>
+                          <Row gutter={[20, 20]}>
+                            <Col xs={24} md={12}>
+                              <Card title="连接耗时" variant="borderless" className="h-full shadow-sm">
+                                <ConnectionLatency timing={result.timing} />
+                              </Card>
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Card title="HTTP 头部" variant="borderless" className="h-full shadow-sm">
+                                <HttpHeaders headers={result.http.headers} />
+                              </Card>
+                            </Col>
+                          </Row>
+                        </div>
+                      )
+                    },
+                    {
+                      label: '证书安全',
+                      key: 'security',
+                      children: (
+                         <div className="p-6 bg-gray-50 dark:bg-gray-900/30" style={{ padding: '24px' }}>
+                          <Row gutter={[20, 20]}>
+                            <Col xs={24} md={12}>
+                              <Card title="TLS/加密套件" variant="borderless" className="h-full shadow-sm">
+                                <TlsCipherSuite tls={result.tls} />
+                              </Card>
+                            </Col>
+                            <Col xs={24} md={12}>
+                              <Card title="证书详情" variant="borderless" className="h-full shadow-sm">
+                                <CertificateDetails certificate={result.certificate} />
+                              </Card>
+                            </Col>
+                          </Row>
+                        </div>
+                      )
+                    },
+                    {
+                      label: '兼容性测试',
+                      key: 'compatibility',
+                      children: (
+                         <div className="p-6 bg-gray-50 dark:bg-gray-900/30" style={{ padding: '24px' }}>
+                          <Row gutter={[20, 20]}>
+                            <Col span={24}>
+                              <Card title="客户端握手模拟测试" variant="borderless" className="shadow-sm">
+                                <ClientHandshakeSimulation tls={result.tls} />
+                              </Card>
+                            </Col>
+                            <Col span={24}>
+                              <Card title="证书兼容性测试 (基于根证书)" variant="borderless" className="shadow-sm">
+                                <CertificateCompatibility certificate={result.certificate} />
+                              </Card>
+                            </Col>
+                          </Row>
+                        </div>
+                      )
+                    }
+                  ]}
+                />
+              </Card>
+            )}
           </div>
         )}
 

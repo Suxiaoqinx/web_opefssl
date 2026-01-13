@@ -4,16 +4,25 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { ConfigProvider, theme as antdTheme, Spin } from 'antd';
 
 type ThemeMode = 'light' | 'dark' | 'system';
+export type LayoutMode = 'grid' | 'tabs';
 
 interface ThemeContextType {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
+  primaryColor: string;
+  setPrimaryColor: (color: string) => void;
+  layoutMode: LayoutMode;
+  setLayoutMode: (mode: LayoutMode) => void;
   isTransitioning: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   mode: 'system',
   setMode: () => {},
+  primaryColor: '#1677ff',
+  setPrimaryColor: () => {},
+  layoutMode: 'grid',
+  setLayoutMode: () => {},
   isTransitioning: false,
 });
 
@@ -21,6 +30,8 @@ export const useTheme = () => useContext(ThemeContext);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mode, setModeState] = useState<ThemeMode>('system');
+  const [primaryColor, setPrimaryColorState] = useState<string>('#1677ff');
+  const [layoutMode, setLayoutModeState] = useState<LayoutMode>('grid');
   const [isDark, setIsDark] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -31,7 +42,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Load from local storage
     const savedMode = localStorage.getItem('theme-mode') as ThemeMode;
     if (savedMode) setModeState(savedMode);
+    
+    const savedColor = localStorage.getItem('theme-color');
+    if (savedColor) setPrimaryColorState(savedColor);
+
+    const savedLayout = localStorage.getItem('theme-layout') as LayoutMode;
+    if (savedLayout) setLayoutModeState(savedLayout);
   }, []);
+
+  const setPrimaryColor = (color: string) => {
+    setPrimaryColorState(color);
+    localStorage.setItem('theme-color', color);
+  };
+
+  const setLayoutMode = (newLayout: LayoutMode) => {
+    setLayoutModeState(newLayout);
+    localStorage.setItem('theme-layout', newLayout);
+  };
 
   const setMode = (newMode: ThemeMode) => {
     if (newMode === mode) return;
@@ -88,12 +115,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ mode, setMode, isTransitioning }}>
+    <ThemeContext.Provider value={{ mode, setMode, primaryColor, setPrimaryColor, layoutMode, setLayoutMode, isTransitioning }}>
       <ConfigProvider
         theme={{
           algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
           token: {
-             // Custom token overrides if needed
+             colorPrimary: primaryColor,
           }
         }}
       >
